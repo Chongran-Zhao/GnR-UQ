@@ -1,0 +1,1 @@
+mpicxx -g -Wall -O3 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.1.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/gnr1d.dir/main.cpp.o -o gnr1d  libgnr1d_lib.a /opt/homebrew/Cellar/open-mpi/4.1.5/lib/libmpi.dylib 

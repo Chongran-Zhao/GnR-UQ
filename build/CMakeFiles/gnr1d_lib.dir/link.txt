@@ -1,0 +1,2 @@
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc libgnr1d_lib.a CMakeFiles/gnr1d_lib.dir/Model_wall.cpp.o CMakeFiles/gnr1d_lib.dir/Sys_Tools.cpp.o CMakeFiles/gnr1d_lib.dir/Time_solver.cpp.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib libgnr1d_lib.a

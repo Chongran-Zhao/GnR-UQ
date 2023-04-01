@@ -8,86 +8,65 @@
 #include "Time_solver.hpp"
 #include <random>
 #include <ctime>
-#include <mpi.h>
 
 double test(const double * P_k, const double * P_G, const double * P_c);
 
-int main(int argc, char** argv)
-{
-  MPI_Init(&argc, &argv);
-
+int main()
+{ 
   uniform_real_distribution<double> c_m3(0.875, 6.125);
   uniform_real_distribution<double> c_c3(5.5, 38.5);
-  default_random_engine e(time(NULL));
-  int num_sim = 200;
+  default_random_engine e(time(NULL)); 
+  int num_sim = 1;
   double * mean_value = new double[num_sim];
 
-  int num_procs, rank;
-  MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  int num_sim_per_proc = num_sim / num_procs;
-  double * local_mean_value = new double[num_sim_per_proc];
-
-  double * P_k = new double[4];
-  P_k[0] = 1.0; // K_c1
-  P_k[1] = 1.0; // K_c2
-  P_k[2] = 1.0; // K_m1
-  P_k[3] = 1.0; // K_m2
-
-  double * P_G = new double [4];
-  P_G[0] = 1.08; // G_ch
-  P_G[1] = 1.20; // G_mh
-  P_G[2] = 1.40; // G_et
-  P_G[3] = 1.40; // G_ez
-
-  double * P_c = new double[2];
-
-  int seed = time(NULL) + rank;
-  default_random_engine local_e(seed); 
-
-  for (int ii = rank * num_sim_per_proc; ii < (rank + 1) * num_sim_per_proc; ii++)
+  int num_threads = 1; // Set the number of threads
+  #pragma omp parallel for num_threads(num_threads)
+  for (int ii = 0; ii < num_sim; ii++)
   {
-    P_c[0] = c_m3(local_e); // c_m3
-    P_c[1] = c_c3(local_e); // c_c3
+    double * P_k = new double[4];
+    P_k[0] = 1.0; // K_c1
+    P_k[1] = 1.0; // K_c2
+    P_k[2] = 1.0; // K_intP_k[3] = 0.9; 
+    P_k[3] = 1.0; // K_m2
+    double * P_G = new double[4];
+    P_G[0] = 1.08; // G_ch
+    P_G[1] = 1.20; // G_mh
+    P_G[2] = 1.4;  // G_et
+    P_G[3] = 1.4;  // G_ez
+    double * P_c = new double[2];
+    P_c[0] = 3.5;//c_m3(e); // c_m3
+    P_c[1] = 22.0;//c_c3(e); // c_c3
 
-    local_mean_value[ii - rank * num_sim_per_proc] = test(P_k, P_G, P_c); 
-    cout << "This is No." << ii << '\t';
-    cout << " simualtion used Processor " << rank << '\t';
-    cout << "Mean value is " << local_mean_value[ii - rank * num_sim_per_proc] << '\t';
-  }
-  // Delete P_G, P_k, and P_c after each loop
-  delete[] P_G;
-  delete[] P_k;
-  delete[] P_c;
-
-  MPI_Gather(local_mean_value, num_sim_per_proc, MPI_DOUBLE, mean_value, num_sim_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-  if (rank == 0) {
-    ofstream MC_mean;
-    MC_mean.open("mean-data.txt");
-    double sum_time = 0.0;
-    for (int ii = 0; ii < num_sim; ii++)
-    {
-      sum_time += mean_value[ii];
-      MC_mean << sum_time / double(ii+1) << endl;
-    }
-    MC_mean.close();
-
-    ofstream MC_var;
-    MC_var.open("var-data.txt");
-    double var = 0.0;
-    for (int ii = 0; ii < num_sim; ii++)
-    {
-      var += pow(mean_value[ii] - (sum_time / double(num_sim)), 2);
-      MC_var << var / double(ii+1) << endl;
-    }
-    MC_var.close();
+    mean_value[ii] = test(P_k, P_G, P_c); // print homeostatic time  
+    cout << "This is No." << ii+1 << " simulation." << '\t';
+    cout << "c_m3 = " << P_c[0] << '\t';
+    cout << "c_c3 = " << P_c[1] << '\t';
+    cout << "Mean-time is " << mean_value[ii] << " days" << endl; 
+    delete[] P_k;
+    delete[] P_G;
+    delete[] P_c;
   }
 
-  MPI_Finalize();
+  ofstream MC_mean;
+  MC_mean.open ("mean-data.txt"); 
+  double sum_time = 0.0;
+  for (int ii = 0; ii < num_sim; ii++)
+  {
+    sum_time += mean_value[ii];
+    MC_mean << sum_time/double(ii+1) << endl;
+  }   
+  MC_mean.close();
+
+  ofstream MC_var;
+  MC_var.open ("var-data.txt");
+  double var = 0.0;
+  for (int ii = 0; ii < num_sim; ii++)
+  {
+    var += pow( mean_value[ii] - (sum_time/double(num_sim)), 2);
+    MC_var << var / double(ii+1) << endl;
+  }
+  MC_var.close();
 }
-
 
 double test(const double * P_k, const double * P_G, const double * P_c )
 {
