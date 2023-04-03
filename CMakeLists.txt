@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.0)
 
 project(gnr1d)
 
-set(CMAKE_CXX_COMPILER "mpicxx")
 set(CMAKE_CXX_STANDARD 11)
 
 # Look for MPI package
 find_package(MPI REQUIRED)
+
 
 # Set compiler flags
 set(CMAKE_CXX_FLAGS "-g -Wall -O3")

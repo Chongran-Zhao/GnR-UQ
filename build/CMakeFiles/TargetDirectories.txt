@@ -1,4 +1,0 @@
-/Users/chongran/Documents/GnR/GnR-UQ/build/CMakeFiles/gnr1d_lib.dir
-/Users/chongran/Documents/GnR/GnR-UQ/build/CMakeFiles/gnr1d.dir
-/Users/chongran/Documents/GnR/GnR-UQ/build/CMakeFiles/edit_cache.dir
-/Users/chongran/Documents/GnR/GnR-UQ/build/CMakeFiles/rebuild_cache.dir
