@@ -60,11 +60,7 @@ Model_wall::Model_wall( const double &in_pi, const double &in_deltaP,
 
   // Allocate memory for Degradation functions
   DQ_m = new double [num_DL];
-  DQ_c = new double [num_DL];
-  DQ2_m = new double [num_t];
-  DQ2_c = new double * [num_t];
-
-  for(int ii=0; ii<num_t; ++ii) DQ2_c[ii] = new double [4];
+  DQ_c = new double [num_DL]; 
  
   // Allocate memory for solutions 
   Da = new double [num_t];
@@ -99,24 +95,17 @@ Model_wall::Model_wall( const double &in_pi, const double &in_deltaP,
   Dalpha[0] = alpha_ckh[2];
 
   // Initialization for degradation functions
-  for(int ii=0; ii<num_t; ++ii)
-  {
-    for(int jj=0; jj<4; ++jj) DQ2_c[ii][jj] = 1.0;
-    DQ2_m[ii] = 1.0;
-  }
 }
-
-
 
 Model_wall::~Model_wall()
 {
-  delete [] DQ_m; delete [] DQ_c; delete [] DQ2_m;
+  delete [] DQ_m; delete [] DQ_c;
   delete [] Da; delete [] Dm_m; delete [] Dalpha;
   for(int ii=0; ii<num_t; ++ii)
   {
-    delete [] DQ2_c[ii]; delete [] Dm_c[ii];
+    delete [] Dm_c[ii];
   }
-  delete [] DQ2_c; delete [] Dm_c;
+  delete [] Dm_c;
   cout<<"Model_wall class is deleted. \n";
 }
 
@@ -323,7 +312,7 @@ void Model_wall::predictor(const int &n_t, const double &tol)
 
 double Model_wall::get_M_ck(const int &ii, const int &tstep) const
 {
-  return M_ckh[ii] * DQ_c[tstep] * DQ2_c[0][ii];
+  return M_ckh[ii] * DQ_c[tstep];
 }
 
 
@@ -379,14 +368,14 @@ double Model_wall::get_ddwddLt_m( const double &mass,
 double Model_wall::get_mc_tau(const int &s, const int &tau, const int &ii,
     const double &dt, const double &wt) const
 {
-  return Dm_c[tau][ii] * q_i_c((s-tau)*dt) * DQ2_c[tau][ii] * wt;
+  return Dm_c[tau][ii] * q_i_c((s-tau)*dt) * wt;
 }
 
 
 double Model_wall::get_mm_tau(const int &s, const int &tau, const double &dt,
             const double &wt) const
 {
-  return Dm_m[tau] * q_i_m((s-tau)*dt) * DQ2_m[tau] * wt;
+  return Dm_m[tau] * q_i_m((s-tau)*dt) * wt;
 }
 
 
@@ -516,50 +505,4 @@ void Model_wall::update_m_m( const int &tstep, const double &Lt,
 
   Dm_m[tstep] = m_m;
 }
-
-
-void Model_wall::update_DQ2_c( const int &ii, 
-    const double &Lt, const double &Lz, const double &dt )
-{
-  const double dwcdLn_h = dWkdLn(G_ch);
-
-  const double alpha_tau[4] = { alpha_ckh[0], alpha_ckh[1],
-            Dalpha[ii], 2.0*pi - Dalpha[ii] };
-
-  double Lt_tau = Da[ii] / a_M;
-  double Lz_tau = 1.0;
-
-  double Lc_k[4] = {0.0, 0.0, 0.0, 0.0};
-  double Lc_k_tau[4] = {0.0, 0.0, 0.0, 0.0};
-
-  SYS_T::get_Lk(Lc_k_tau, Lt_tau, Lz_tau, alpha_tau, 4);
-  SYS_T::get_Lk(Lc_k,     Lt,     Lz,     alpha_tau, 4);
-  
-  double stretch, beta_c;
-  for(int jj=0; jj<4; ++jj)
-  {
-    stretch = G_ch * Lc_k[jj] / Lc_k_tau[jj];
-    
-    beta_c = dWkdLn(stretch) / dwcdLn_h;
-
-    DQ2_c[ii][jj] = exp(-1.0 * f_beta(beta_c, kq_c) * dt) * DQ2_c[ii][jj];
-  }
-}
-
-
-void Model_wall::update_DQ2_m( const int &ii,
-    const double &Lt, const double &Lz, const double &dt )
-{
-  const double dwmdLn_h = dWmdLn(G_mh);
-
-  const double Lt_tau = Da[ii] / a_M;
-
-  const double Lm_n = G_mh * Lt / Lt_tau;
-
-  const double beta_m = dWmdLn(Lm_n) / dwmdLn_h;
-
-  DQ2_m[ii] = exp(-1.0 * f_beta(beta_m, kq_m) * dt) * DQ2_m[ii];
-}
-
-
 // EOF
