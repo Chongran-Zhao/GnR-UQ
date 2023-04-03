@@ -364,13 +364,7 @@ double test(const double * P_k, const double * P_G, const double * P_c )
     //outfile<<a_t<<'\t'<<h_h<<'\t'<<M_c<<'\t'<<M_m<<'\t'<<M_e<<'\t'<<total_M<<'\t';
     //outfile<<wall->get_Dalpha(n_t);
     //outfile<<endl;
-
-    // update DQ2 from tn0 to the current time step 
-    for(int ii=tn0; ii<=n_t; ++ii)
-    {
-      wall->update_DQ2_c(ii, L_t, L_z, tsolver->get_dt());
-      wall->update_DQ2_m(ii, L_t, L_z, tsolver->get_dt());
-    }
+ 
     const double tol_homeostasis = 1.0e-5;
     bool cdt1 = ( abs(radius_t[n_t]/radius_t[n_t] - 1.0) <= tol_homeostasis );
     bool cdt2 = ( abs(M_m_t[n_t]/M_m_t[n_t-1] - 1.0) <= tol_homeostasis );
