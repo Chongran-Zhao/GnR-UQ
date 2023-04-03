@@ -106,7 +106,7 @@ Model_wall::~Model_wall()
     delete [] Dm_c[ii];
   }
   delete [] Dm_c;
-  cout<<"Model_wall class is deleted. \n";
+  // cout<<"Model_wall class is deleted. \n";
 }
 
 

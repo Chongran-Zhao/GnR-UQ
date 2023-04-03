@@ -13,8 +13,8 @@ void test(const double * P_k, const double * P_G, const double * P_c, const int 
 
 int main()
 {
-  int num_sim = 10;
-  int num_threads = 10; // Set the number of threads
+  int num_sim = 500;
+  int num_threads = 8; // Set the number of threads
   #pragma omp parallel for num_threads(num_threads)
   for (int ii = 1; ii < num_sim; ii++)
   {
