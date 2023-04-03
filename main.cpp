@@ -7,7 +7,6 @@
 #include "Model_wall.hpp"
 #include "Time_solver.hpp"
 #include <random>
-#include <ctime>
 #include <mpi.h>
 
 double test(const double * P_k, const double * P_G, const double * P_c);
@@ -54,7 +53,7 @@ int main(int argc, char** argv)
     local_mean_value[ii - rank * num_sim_per_proc] = test(P_k, P_G, P_c); 
     cout << "This is No." << ii << '\t';
     cout << " simualtion used Processor " << rank << '\t';
-    cout << "Mean value is " << local_mean_value[ii - rank * num_sim_per_proc] << '\t';
+    cout << "Mean value is " << local_mean_value[ii - rank * num_sim_per_proc] << '\n';
   }
   // Delete P_G, P_k, and P_c after each loop
   delete[] P_G;
