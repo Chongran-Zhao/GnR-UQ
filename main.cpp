@@ -302,12 +302,6 @@ void test(const double * P_k, const double * P_G, const double * P_c, const int 
     //outfile<<wall->get_Dalpha(n_t);
     //outfile<<endl;
 
-    // update DQ2 from tn0 to the current time step 
-    for(int ii=tn0; ii<=n_t; ++ii)
-    {
-      wall->update_DQ2_c(ii, L_t, L_z, tsolver->get_dt());
-      wall->update_DQ2_m(ii, L_t, L_z, tsolver->get_dt());
-    }
     //cout<<"Time t= "<<t<<'\t';
     //cout<<"num_it1 = "<<num_it1<<'\t'<<"tol_a = "<<tol_a<<'\t';
     //cout<<"L_t = "<<L_t<<'\t'<<"h_h = "<<h_h<<'\t';
