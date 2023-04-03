@@ -63,7 +63,7 @@ class Model_wall
     double get_a_M() const {return a_M;}
     double get_Da(const int &ii) const {return Da[ii];}
     double get_M_ck(const int &ii, const int &tstep) const; 
-    double get_M_m(const int &tstep) const {return M_mh * DQ_m[tstep] * DQ2_m[0];}
+    double get_M_m(const int &tstep) const {return M_mh * DQ_m[tstep];}
     
     double get_M_eh() const {return M_eh;}
     double get_M_mh() const {return M_mh;}
@@ -153,14 +153,6 @@ class Model_wall
         const double &dwdLt, const double &Tact, const double &Mm,
         const double &C_t, double &error, double &error_bottom );
 
-
-    // DQ2 -- tension-dependent degradation update 
-    void update_DQ2_c( const int &ii, const double &Lt, const double &Lz,
-        const double &dt );
-
-    void update_DQ2_m( const int &ii, const double &Lt, const double &Lz,
-        const double &dt );
-
     // error function
     double l2error_a( const double &in_a, const int &tstep ) const;
 
@@ -238,8 +230,6 @@ class Model_wall
     const int num_t, num_DL;
     double * DQ_m;
     double * DQ_c;
-    double * DQ2_m;
-    double ** DQ2_c;
 
     // solutions
     double * Da;
@@ -247,8 +237,6 @@ class Model_wall
     double ** Dm_c;
     double * Dalpha;
 
-    double f_beta(const double &beta, const double &kq) 
-      const {return abs(beta - 1.0) * kq;}
 };
 
 
