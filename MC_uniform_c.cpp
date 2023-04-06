@@ -9,29 +9,31 @@
 #include <random>
 #include <mpi.h>
 
-double test(const double * P_k, const double * P_G, const double * P_c);
+double * run_sim(const double * P_k, const double * P_G, const double * P_c);
 
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
 
-  uniform_real_distribution<double> c_m3(3.35, 3.75);
-  uniform_real_distribution<double> c_c3(21.0, 23.0);
+  uniform_real_distribution<double> c_m3(3.325, 3.675);
+  uniform_real_distribution<double> c_c3(20.9, 23.1);
   default_random_engine e(time(NULL));
-  int num_sim = 8;
-  double * mean_value = new double[num_sim];
+  int num_sim = 10000;
+  double * mean_value_radius = new double[num_sim];
+  double * mean_value_width  = new double[num_sim];
+  double * mean_value_mass   = new double[num_sim];
 
   int num_procs, rank;
   MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   int num_sim_per_proc = num_sim / num_procs;
-  double * local_mean_value = new double[num_sim_per_proc];
+  double * local_mean_value_radius = new double[num_sim_per_proc];
+  double * local_mean_value_width  = new double[num_sim_per_proc];
+  double * local_mean_value_mass   = new double[num_sim_per_proc];
 
   double P_k[4] = {1.0, 1.0, 1.0, 1.0}; // K_c1, K_c2, K_m1, K_m2
-
   double P_G[4] = {1.08, 1.20, 1.40, 1.40}; // G_ch, G_mh, G_et, G_ez
-
   double P_c[2];
 
   int seed = time(NULL) + rank;
@@ -42,39 +44,89 @@ int main(int argc, char** argv)
     P_c[0] = c_m3(local_e); // c_m3
     P_c[1] = c_c3(local_e); // c_c3
 
-    local_mean_value[ii - rank * num_sim_per_proc] = test(P_k, P_G, P_c);
-    cout << "This is No." << ii << '\t';
-    cout << " simualtion used Processor " << rank << '\t';
-    cout << "Mean value is " << local_mean_value[ii - rank * num_sim_per_proc] << '\n';
+    double * result = run_sim(P_k, P_G, P_c);
+    local_mean_value_radius[ii - rank * num_sim_per_proc] = result[0];
+    local_mean_value_width[ii - rank * num_sim_per_proc] = result[1];
+    local_mean_value_mass[ii - rank * num_sim_per_proc] = result[2];
+    cout << "This is No." << ii << '\t'; 
   }
-  
-  MPI_Gather(local_mean_value, num_sim_per_proc, MPI_DOUBLE, mean_value, num_sim_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+  MPI_Gather(local_mean_value_radius, num_sim_per_proc, MPI_DOUBLE, mean_value_radius, num_sim_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Gather(local_mean_value_width, num_sim_per_proc, MPI_DOUBLE, mean_value_width, num_sim_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Gather(local_mean_value_mass, num_sim_per_proc, MPI_DOUBLE, mean_value_mass, num_sim_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
 
   if (rank == 0) {
-    ofstream MC_mean;
-    MC_mean.open("mean-data.txt");
-    double sum_time = 0.0;
+    double tol_radius = 1e-5;
+    ofstream MC_mean_radius;
+    MC_mean_radius.open("mean-value-radius.txt");
+    double sum_radius = 0.0;
     for (int ii = 0; ii < num_sim; ii++)
     {
-      sum_time += mean_value[ii];
-      MC_mean << sum_time / double(ii+1) << endl;
+      sum_radius += mean_value_radius[ii];
+      MC_mean_radius << sum_radius / double(ii+1) << endl;
     }
-    MC_mean.close();
-
-    ofstream MC_var;
-    MC_var.open("var-data.txt");
-    double var = 0.0;
-    for (int ii = 0; ii < num_sim; ii++)
-    {
-      var += pow(mean_value[ii] - (sum_time / double(num_sim)), 2);
-      MC_var << var / double(ii+1) << endl;
-    }
-    MC_var.close();
   }
-  MPI_Finalize();
+  MC_mean_radius.close();
+
+  ofstream MC_var_radius;
+  MC_var_radius.open("var-radius.txt");
+  double var_radius = 0.0;
+  for (int ii = 0; ii < num_sim; ii++)
+  {
+    var_radius += pow(mean_value_radius[ii] - (sum_radius / double(num_sim)), 2);
+    MC_var_radius << var_radius / double(ii+1) << endl;
+  }
+  MC_var_radius.close();
 }
 
-double test(const double * P_k, const double * P_G, const double * P_c )
+if (rank == 1) {
+  ofstream MC_mean_width;
+  MC_mean_width.open("mean-value-width.txt");
+  double sum_width = 0.0;
+  for (int ii = 0; ii < num_sim; ii++)
+  {
+    sum_width += mean_value_width[ii];
+    MC_mean_width << sum_width / double(ii+1) << endl;
+  }
+  MC_mean_width.close();
+
+  ofstream MC_var_width;
+  MC_var_width.open("var-width.txt");
+  double var_width = 0.0;
+  for (int ii = 0; ii < num_sim; ii++)
+  {
+    var_width += pow(mean_value_width[ii] - (sum_width / double(num_sim)), 2);
+    MC_var_width << var_width / double(ii+1) << endl;
+  }
+  MC_var_width.close();
+}
+
+if (rank == 2) {
+  ofstream MC_mean_mass;
+  MC_mean_mass.open("mean-value-mass.txt");
+  double sum_mass = 0.0;
+  for (int ii = 0; ii < num_sim; ii++)
+  {
+    sum_mass += mean_value_mass[ii];
+    MC_mean_mass << sum_mass / double(ii+1) << endl;
+  }
+  MC_mean_mass.close();
+
+  ofstream MC_var_mass;
+  MC_var_mass.open("var-mass.txt");
+  double var_mass = 0.0;
+  for (int ii = 0; ii < num_sim; ii++)
+  {
+    var_mass += pow(mean_value_mass[ii] - (sum_mass / double(num_sim)), 2);
+    MC_var_mass << var_mass / double(ii+1) << endl;
+  }
+  MC_var_mass.close();
+}
+MPI_Finalize();
+}
+
+double * run_sim(const double * P_k, const double * P_G, const double * P_c )
 {
   const double pi = atan(1) * 4;
 
@@ -136,10 +188,9 @@ double test(const double * P_k, const double * P_G, const double * P_c )
   double Lm_n;
   double C_t, dC_t, T_act, dT_act;
   double Fa, dFa_da;
-  // double h_h;
-  // double total_M;
-  // double tau_w;
-  double t_homeostasis = 0.0;
+  double h_h;
+  double total_M; 
+  double * result = new double[3];
   double radius_t[tsolver->get_num_t()];
   double M_m_t[tsolver->get_num_t()];
   double M_ck_t[tsolver->get_num_t()][4];
@@ -150,15 +201,6 @@ double test(const double * P_k, const double * P_G, const double * P_c )
   }
   radius_t[0] = wall->get_a_M();
   // --------------------------------------
-
-  // ----- Prepare file for recording -----
-  //ofstream outfile( "results", ofstream::out | ofstream::trunc );
-
-  //if(!outfile)
-  //{
-  //cerr<<"Error: unable to open file to record results. \n";
-  //exit(EXIT_FAILURE);
-  //}
 
   // --------------------------------------
   for( int n_t = 1; n_t < tsolver->get_num_t(); ++n_t )
@@ -180,8 +222,6 @@ double test(const double * P_k, const double * P_G, const double * P_c )
     tol_m = 100.0; num_it1 = 0;
 
     tn0 = SYS_T::get_tn0(n_t, tsolver->get_num_DL()); 
-
-    //outfile<<t<<'\t'<<P<<'\t'<<Q<<'\t';
 
     while( (tol_m > Max_error_m) && (num_it1 < Max_it) )
     {
@@ -336,9 +376,9 @@ double test(const double * P_k, const double * P_G, const double * P_c )
 
     wall->set_Dalpha(n_t, L_t, L_z);
 
-    // double M_e = wall->get_M_eh();
-    // total_M = M_c + M_e + M_m;
-    // h_h = total_M / (wall->get_rho_s() * L_t * L_z);
+    double M_e = wall->get_M_eh();
+    total_M = M_c + M_e + M_m;
+    h_h = total_M / (wall->get_rho_s() * L_t * L_z);
     // tau_w = 4.0 * wall->get_mu() * Q / (pi*a_t*a_t*a_t);
     radius_t[n_t] = a_t;
     M_m_t[n_t] = M_m;
@@ -346,10 +386,7 @@ double test(const double * P_k, const double * P_G, const double * P_c )
     {
       M_ck_t[n_t][ii] = M_ck[ii];
     }
-    //outfile<<a_t<<'\t'<<h_h<<'\t'<<M_c<<'\t'<<M_m<<'\t'<<M_e<<'\t'<<total_M<<'\t';
-    //outfile<<wall->get_Dalpha(n_t);
-    //outfile<<endl;
- 
+
     const double tol_homeostasis = 1.0e-5;
     bool cdt1 = ( abs(radius_t[n_t]/radius_t[n_t] - 1.0) <= tol_homeostasis );
     bool cdt2 = ( abs(M_m_t[n_t]/M_m_t[n_t-1] - 1.0) <= tol_homeostasis );
@@ -359,17 +396,13 @@ double test(const double * P_k, const double * P_G, const double * P_c )
     bool cdt6 = ( abs(M_ck_t[n_t][3]/M_ck_t[n_t-1][3] - 1.0) <= tol_homeostasis );
     if ( cdt1 && cdt2 && cdt3 && cdt4 && cdt5 && cdt6 )
     {
-      t_homeostasis = t; 
+      result[0] = a_t;
+      result[1] = h_h;
+      result[3] = total_M; 
       break;
     }
-    //cout<<"Time t= "<<t<<'\t';
-    //cout<<"num_it1 = "<<num_it1<<'\t'<<"tol_a = "<<tol_a<<'\t';
-    //cout<<"L_t = "<<L_t<<'\t'<<"h_h = "<<h_h<<'\t';
-    //cout<<"total_M = "<<total_M<<'\t';
-    //cout<<endl; 
   }
-  return t_homeostasis;
-  //outfile.close(); 
+  return result; 
   delete wall; delete tsolver;
 }
 // EOF

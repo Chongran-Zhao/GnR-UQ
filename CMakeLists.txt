@@ -24,6 +24,6 @@ include_directories(${MPI_INCLUDE_PATH})
 
 add_library(gnr1d_lib ${SOURCES})
 
-add_executable(gnr1d main.cpp)
+add_executable(MC_uniform_c MC_uniform_c.cpp)
 
-target_link_libraries(gnr1d gnr1d_lib ${MPI_LIBRARIES})
+target_link_libraries(MC_uniform_c gnr1d_lib ${MPI_LIBRARIES})
