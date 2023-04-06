@@ -28,38 +28,26 @@ int main(int argc, char** argv)
   int num_sim_per_proc = num_sim / num_procs;
   double * local_mean_value = new double[num_sim_per_proc];
 
-  double * P_k = new double[4];
-  P_k[0] = 1.0; // K_c1
-  P_k[1] = 1.0; // K_c2
-  P_k[2] = 1.0; // K_m1
-  P_k[3] = 1.0; // K_m2
+  double P_k[4] = {1.0, 1.0, 1.0, 1.0}; // K_c1, K_c2, K_m1, K_m2
 
-  double * P_G = new double [4];
-  P_G[0] = 1.08; // G_ch
-  P_G[1] = 1.20; // G_mh
-  P_G[2] = 1.40; // G_et
-  P_G[3] = 1.40; // G_ez
+  double P_G[4] = {1.08, 1.20, 1.40, 1.40}; // G_ch, G_mh, G_et, G_ez
 
-  double * P_c = new double[2];
+  double P_c[2];
 
   int seed = time(NULL) + rank;
-  default_random_engine local_e(seed); 
+  default_random_engine local_e(seed);
 
   for (int ii = rank * num_sim_per_proc; ii < (rank + 1) * num_sim_per_proc; ii++)
   {
     P_c[0] = c_m3(local_e); // c_m3
     P_c[1] = c_c3(local_e); // c_c3
 
-    local_mean_value[ii - rank * num_sim_per_proc] = test(P_k, P_G, P_c); 
+    local_mean_value[ii - rank * num_sim_per_proc] = test(P_k, P_G, P_c);
     cout << "This is No." << ii << '\t';
     cout << " simualtion used Processor " << rank << '\t';
     cout << "Mean value is " << local_mean_value[ii - rank * num_sim_per_proc] << '\n';
   }
-  // Delete P_G, P_k, and P_c after each loop
-  delete[] P_G;
-  delete[] P_k;
-  delete[] P_c;
-
+  
   MPI_Gather(local_mean_value, num_sim_per_proc, MPI_DOUBLE, mean_value, num_sim_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
   if (rank == 0) {
@@ -85,7 +73,6 @@ int main(int argc, char** argv)
   }
   MPI_Finalize();
 }
-
 
 double test(const double * P_k, const double * P_G, const double * P_c )
 {
