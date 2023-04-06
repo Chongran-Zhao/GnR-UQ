@@ -1,5 +1,5 @@
 // ==================================================================
-// Use OpenMP to test Uncertain Qualification
+// Use OpenMPI to test Uncertain Qualification
 // Date: 11st March 2023
 // ==================================================================
 #include <fstream>
@@ -15,10 +15,10 @@ int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
 
-  uniform_real_distribution<double> c_m3(0.875, 6.125);
-  uniform_real_distribution<double> c_c3(5.5, 38.5);
+  uniform_real_distribution<double> c_m3(3.35, 3.75);
+  uniform_real_distribution<double> c_c3(21.0, 23.0);
   default_random_engine e(time(NULL));
-  int num_sim = 200;
+  int num_sim = 8;
   double * mean_value = new double[num_sim];
 
   int num_procs, rank;
@@ -83,7 +83,6 @@ int main(int argc, char** argv)
     }
     MC_var.close();
   }
-
   MPI_Finalize();
 }
 
