@@ -20,7 +20,7 @@ int main(int argc, char** argv)
   uniform_real_distribution<double> G_et(1.33, 1.47);   // 1.40 x [0.95, 1.05]
   uniform_real_distribution<double> G_ez(1.33, 1.47);   // 1.40 x [0.95, 1.05]
   default_random_engine e(time(NULL));
-  int num_sim = 10000;
+  int num_sim = 10080;
   double * mean_value_radius = new double[num_sim];
   double * mean_value_width  = new double[num_sim];
   double * mean_value_mass   = new double[num_sim];

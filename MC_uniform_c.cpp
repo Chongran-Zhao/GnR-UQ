@@ -18,7 +18,7 @@ int main(int argc, char** argv)
   uniform_real_distribution<double> c_m3(3.325, 3.675);
   uniform_real_distribution<double> c_c3(20.9, 23.1);
   default_random_engine e(time(NULL));
-  int num_sim = 10000;
+  int num_sim = 10080;
   double * mean_value_radius = new double[num_sim];
   double * mean_value_width  = new double[num_sim];
   double * mean_value_mass   = new double[num_sim];
