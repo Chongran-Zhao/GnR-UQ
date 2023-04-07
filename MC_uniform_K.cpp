@@ -15,8 +15,10 @@ int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
 
-  uniform_real_distribution<double> c_m3(3.325, 3.675);
-  uniform_real_distribution<double> c_c3(20.9, 23.1);
+  uniform_real_distribution<double> K_c1(0.95, 1.05);   // 1.0 x [0.95, 1.05]
+  uniform_real_distribution<double> K_c2(0.95, 1.05);   // 1.0 x [0.95, 1.05]
+  uniform_real_distribution<double> K_m1(0.95, 1.05);   // 1.0 x [0.95, 1.05]
+  uniform_real_distribution<double> K_m2(0.95, 1.05);   // 1.0 x [0.95, 1.05]
   default_random_engine e(time(NULL));
   int num_sim = 10000;
   double * mean_value_radius = new double[num_sim];
@@ -32,17 +34,19 @@ int main(int argc, char** argv)
   double * local_mean_value_width  = new double[num_sim_per_proc];
   double * local_mean_value_mass   = new double[num_sim_per_proc];
 
-  double P_k[4] = {1.0, 1.0, 1.0, 1.0}; // K_c1, K_c2, K_m1, K_m2
+  double P_k[4];                            // K_c1, K_c2, K_m1, K_m2
   double P_G[4] = {1.08, 1.20, 1.40, 1.40}; // G_ch, G_mh, G_et, G_ez
-  double P_c[2];
+  double P_c[2] = {3.5, 22.0};              // c_m3, c_c3
 
   int seed = time(NULL) + rank;
   default_random_engine local_e(seed);
 
   for (int ii = rank * num_sim_per_proc; ii < (rank + 1) * num_sim_per_proc; ii++)
   {
-    P_c[0] = c_m3(local_e); // c_m3
-    P_c[1] = c_c3(local_e); // c_c3
+    P_k[0] = K_c1(local_e);
+    P_k[1] = K_c2(local_e);
+    P_k[2] = K_m1(local_e);
+    P_k[3] = K_m2(local_e);
 
     double * result = run_sim(P_k, P_G, P_c);
     local_mean_value_radius[ii - rank * num_sim_per_proc] = result[0];
@@ -59,7 +63,7 @@ int main(int argc, char** argv)
   if (rank == 0) {
     double tol = 1.0e-5; 
     ofstream MC_mean_radius;
-    MC_mean_radius.open("c-mean-value-radius.txt");
+    MC_mean_radius.open("K-mean-value-radius.txt");
     double sum_radius = 1.0;
     int counter = 0;
     double error = 1.0;
@@ -75,7 +79,7 @@ int main(int argc, char** argv)
     MC_mean_radius.close();
 
     ofstream MC_var_radius;
-    MC_var_radius.open("c-var-radius.txt");
+    MC_var_radius.open("K-var-radius.txt");
     double var_radius = 0.0;
     for (int ii = 0; ii < counter; ii++)
     {
@@ -88,7 +92,7 @@ int main(int argc, char** argv)
   if (rank == 1) {
     double tol = 1.0e-5;
     ofstream MC_mean_width;
-    MC_mean_width.open("c-mean-value-width.txt");
+    MC_mean_width.open("K-mean-value-width.txt");
     double sum_width = 1.0;
     int counter = 0;
     double error = 1.0;
@@ -104,7 +108,7 @@ int main(int argc, char** argv)
     MC_mean_width.close();
 
     ofstream MC_var_width;
-    MC_var_width.open("c-var-width.txt");
+    MC_var_width.open("K-var-width.txt");
     double var_width = 0.0;
     for (int ii = 0; ii < counter; ii++)
     {
@@ -117,7 +121,7 @@ int main(int argc, char** argv)
   if (rank == 2) {
     double tol = 1.0e-5;
     ofstream MC_mean_mass;
-    MC_mean_mass.open("c-mean-value-mass.txt");
+    MC_mean_mass.open("K-mean-value-mass.txt");
     double sum_mass = 0.0;
     int counter = 0;
     double error = 1.0;
@@ -133,7 +137,7 @@ int main(int argc, char** argv)
     MC_mean_mass.close();
 
     ofstream MC_var_mass;
-    MC_var_mass.open("c-var-mass.txt");
+    MC_var_mass.open("K-var-mass.txt");
     double var_mass = 0.0;
     for (int ii = 0; ii < counter; ii++)
     {
