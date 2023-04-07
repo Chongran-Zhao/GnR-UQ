@@ -57,73 +57,92 @@ int main(int argc, char** argv)
 
 
   if (rank == 0) {
-    double tol_radius = 1e-5;
+    double tol = 1.0e-5; 
     ofstream MC_mean_radius;
     MC_mean_radius.open("mean-value-radius.txt");
-    double sum_radius = 0.0;
-    for (int ii = 0; ii < num_sim; ii++)
-    {
-      sum_radius += mean_value_radius[ii];
-      MC_mean_radius << sum_radius / double(ii+1) << endl;
+    double sum_radius = 1.0;
+    int counter = 0;
+    double error = 1.0;
+    while (counter < num_sim && error > tol)
+    { 
+      if (counter > 0) {error = sum_radius / double(counter);}
+      sum_radius += mean_value_radius[counter];
+      if (counter > 0) {error = abs(error - sum_radius/double(counter+1)) / error;}
+      MC_mean_radius << sum_radius / double(counter+1) << endl;
+      counter += 1;
     }
-  }
-  MC_mean_radius.close();
+    MC_mean_radius << "It took " << counter << " samples to converge." << endl;
+    MC_mean_radius.close();
 
-  ofstream MC_var_radius;
-  MC_var_radius.open("var-radius.txt");
-  double var_radius = 0.0;
-  for (int ii = 0; ii < num_sim; ii++)
-  {
-    var_radius += pow(mean_value_radius[ii] - (sum_radius / double(num_sim)), 2);
-    MC_var_radius << var_radius / double(ii+1) << endl;
+    ofstream MC_var_radius;
+    MC_var_radius.open("var-radius.txt");
+    double var_radius = 0.0;
+    for (int ii = 0; ii < counter; ii++)
+    {
+      var_radius += pow(mean_value_radius[ii] - (sum_radius / double(num_sim)), 2);
+      MC_var_radius << var_radius / double(ii+1) << endl;
+    }
+    MC_var_radius.close();
   }
-  MC_var_radius.close();
-}
 
-if (rank == 1) {
-  ofstream MC_mean_width;
-  MC_mean_width.open("mean-value-width.txt");
-  double sum_width = 0.0;
-  for (int ii = 0; ii < num_sim; ii++)
-  {
-    sum_width += mean_value_width[ii];
-    MC_mean_width << sum_width / double(ii+1) << endl;
-  }
-  MC_mean_width.close();
+  if (rank == 1) {
+    double tol = 1.0e-5;
+    ofstream MC_mean_width;
+    MC_mean_width.open("mean-value-width.txt");
+    double sum_width = 1.0;
+    int counter = 0;
+    double error = 1.0;
+    while (counter < num_sim && error > tol)
+    {
+      if (counter > 0) {error = sum_width / double(counter);}
+      sum_width += mean_value_width[counter];
+      if (counter > 0) {error = abs(error - sum_width/double(counter+1)) / error;}
+      MC_mean_width << sum_width / double(counter+1) << endl;
+      counter += 1;
+    }
+    MC_mean_width << "It took " << counter << " samples to converge." << endl;
+    MC_mean_width.close();
 
-  ofstream MC_var_width;
-  MC_var_width.open("var-width.txt");
-  double var_width = 0.0;
-  for (int ii = 0; ii < num_sim; ii++)
-  {
-    var_width += pow(mean_value_width[ii] - (sum_width / double(num_sim)), 2);
-    MC_var_width << var_width / double(ii+1) << endl;
+    ofstream MC_var_width;
+    MC_var_width.open("var-width.txt");
+    double var_width = 0.0;
+    for (int ii = 0; ii < counter; ii++)
+    {
+      var_width += pow(mean_value_width[ii] - (sum_width / double(num_sim)), 2);
+      MC_var_width << var_width / double(ii+1) << endl;
+    }
+    MC_var_width.close();
   }
-  MC_var_width.close();
-}
 
-if (rank == 2) {
-  ofstream MC_mean_mass;
-  MC_mean_mass.open("mean-value-mass.txt");
-  double sum_mass = 0.0;
-  for (int ii = 0; ii < num_sim; ii++)
-  {
-    sum_mass += mean_value_mass[ii];
-    MC_mean_mass << sum_mass / double(ii+1) << endl;
-  }
-  MC_mean_mass.close();
+  if (rank == 2) {
+    double tol = 1.0e-5;
+    ofstream MC_mean_mass;
+    MC_mean_mass.open("mean-value-mass.txt");
+    double sum_mass = 0.0;
+    int counter = 0;
+    double error = 1.0;
+    while (counter < num_sim && error > tol)
+    {
+      if (counter > 0) {error = sum_mass / double(counter);}
+      sum_mass += mean_value_mass[counter];
+      if (counter > 0) {error = abs(error - sum_mass/double(counter+1)) / error;}
+      MC_mean_mass << sum_mass / double(counter+1) << endl;
+      counter += 1;
+    }
+    MC_mean_mass << "It took " << counter << " samples to converge." << endl;
+    MC_mean_mass.close();
 
-  ofstream MC_var_mass;
-  MC_var_mass.open("var-mass.txt");
-  double var_mass = 0.0;
-  for (int ii = 0; ii < num_sim; ii++)
-  {
-    var_mass += pow(mean_value_mass[ii] - (sum_mass / double(num_sim)), 2);
-    MC_var_mass << var_mass / double(ii+1) << endl;
+    ofstream MC_var_mass;
+    MC_var_mass.open("var-mass.txt");
+    double var_mass = 0.0;
+    for (int ii = 0; ii < counter; ii++)
+    {
+      var_mass += pow(mean_value_mass[ii] - (sum_mass / double(num_sim)), 2);
+      MC_var_mass << var_mass / double(ii+1) << endl;
+    }
+    MC_var_mass.close();
   }
-  MC_var_mass.close();
-}
-MPI_Finalize();
+  MPI_Finalize();
 }
 
 double * run_sim(const double * P_k, const double * P_G, const double * P_c )
