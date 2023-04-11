@@ -18,7 +18,7 @@ int main(int argc, char** argv)
   uniform_real_distribution<double> c_m3(3.325, 3.675);
   uniform_real_distribution<double> c_c3(20.9, 23.1);
   default_random_engine e(time(NULL));
-  int num_sim = 8;
+  int num_sim = 120;
   double * mean_value_radius = new double[num_sim];
   double * mean_value_width  = new double[num_sim];
   double * mean_value_mass   = new double[num_sim];
@@ -57,10 +57,10 @@ int main(int argc, char** argv)
 
 
   if (rank == 0) {
-    double tol = 1.0e-5; 
+    double tol = 1.0e-8; 
     ofstream MC_mean_radius;
     MC_mean_radius.open("c-mean-value-radius.txt");
-    double sum_radius = 1.0;
+    double sum_radius = 0.0;
     int counter = 0;
     double error = 1.0;
     while (counter < num_sim && error > tol)
@@ -86,10 +86,10 @@ int main(int argc, char** argv)
   }
 
   if (rank == 1) {
-    double tol = 1.0e-5;
+    double tol = 1.0e-8;
     ofstream MC_mean_width;
     MC_mean_width.open("c-mean-value-width.txt");
-    double sum_width = 1.0;
+    double sum_width = 0.0;
     int counter = 0;
     double error = 1.0;
     while (counter < num_sim && error > tol)
@@ -115,10 +115,10 @@ int main(int argc, char** argv)
   }
 
   if (rank == 2) {
-    double tol = 1.0e-5;
+    double tol = 1.0e-8;
     ofstream MC_mean_mass;
     MC_mean_mass.open("c-mean-value-mass.txt");
-    double sum_mass = 1.0;
+    double sum_mass = 0.0;
     int counter = 0;
     double error = 1.0;
     while (counter < num_sim && error > tol)
@@ -417,7 +417,7 @@ double * run_sim(const double * P_k, const double * P_G, const double * P_c )
     {
       result[0] = a_t;
       result[1] = h_h;
-      result[3] = total_M; 
+      result[2] = total_M; 
       break;
     }
   }
