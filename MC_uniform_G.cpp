@@ -20,7 +20,7 @@ int main(int argc, char** argv)
   uniform_real_distribution<double> G_et(1.33, 1.47);   // 1.40 x [0.95, 1.05]
   uniform_real_distribution<double> G_ez(1.33, 1.47);   // 1.40 x [0.95, 1.05]
   default_random_engine e(time(NULL));
-  int num_sim = 10080;
+  int num_sim = 8;
   double * mean_value_radius = new double[num_sim];
   double * mean_value_width  = new double[num_sim];
   double * mean_value_mass   = new double[num_sim];
@@ -50,14 +50,14 @@ int main(int argc, char** argv)
 
     double * result = run_sim(P_k, P_G, P_c);
     local_mean_value_radius[ii - rank * num_sim_per_proc] = result[0];
-    local_mean_value_width[ii - rank * num_sim_per_proc] = result[1];
-    local_mean_value_mass[ii - rank * num_sim_per_proc] = result[2];
-    cout << "This is No." << ii << '\t'; 
+    local_mean_value_width [ii - rank * num_sim_per_proc] = result[1];
+    local_mean_value_mass  [ii - rank * num_sim_per_proc] = result[2];
+    cout << "This is No." << ii << endl; 
   }
 
   MPI_Gather(local_mean_value_radius, num_sim_per_proc, MPI_DOUBLE, mean_value_radius, num_sim_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Gather(local_mean_value_width, num_sim_per_proc, MPI_DOUBLE, mean_value_width, num_sim_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Gather(local_mean_value_mass, num_sim_per_proc, MPI_DOUBLE, mean_value_mass, num_sim_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Gather(local_mean_value_width , num_sim_per_proc, MPI_DOUBLE, mean_value_width , num_sim_per_proc, MPI_DOUBLE, 1, MPI_COMM_WORLD);
+  MPI_Gather(local_mean_value_mass  , num_sim_per_proc, MPI_DOUBLE, mean_value_mass  , num_sim_per_proc, MPI_DOUBLE, 2, MPI_COMM_WORLD);
 
 
   if (rank == 0) {
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
     double tol = 1.0e-5;
     ofstream MC_mean_mass;
     MC_mean_mass.open("G-mean-value-mass.txt");
-    double sum_mass = 0.0;
+    double sum_mass = 1.0;
     int counter = 0;
     double error = 1.0;
     while (counter < num_sim && error > tol)
