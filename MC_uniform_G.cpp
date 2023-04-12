@@ -20,7 +20,7 @@ int main(int argc, char** argv)
   uniform_real_distribution<double> G_et(1.33, 1.47);   // 1.40 x [0.95, 1.05]
   uniform_real_distribution<double> G_ez(1.33, 1.47);   // 1.40 x [0.95, 1.05]
   default_random_engine e(time(NULL));
-  int num_sim = 120;
+  int num_sim = 6400;
   double * mean_value_radius = new double[num_sim];
   double * mean_value_width  = new double[num_sim];
   double * mean_value_mass   = new double[num_sim];
@@ -40,7 +40,7 @@ int main(int argc, char** argv)
 
   int seed = time(NULL) + rank;
   default_random_engine local_e(seed);
-
+  int counter = num_sim / num_procs;
   for (int ii = rank * num_sim_per_proc; ii < (rank + 1) * num_sim_per_proc; ii++)
   {
     P_G[0] = G_ch(local_e);
@@ -49,15 +49,22 @@ int main(int argc, char** argv)
     P_G[3] = G_ez(local_e);
 
     double * result = run_sim(P_k, P_G, P_c);
+    counter -= 1;
     local_mean_value_radius[ii - rank * num_sim_per_proc] = result[0];
     local_mean_value_width [ii - rank * num_sim_per_proc] = result[1];
     local_mean_value_mass  [ii - rank * num_sim_per_proc] = result[2];
-    cout << "This is No." << ii << endl; 
+    if (rank == 0)
+    {
+      cout << "There still exist " << counter << " * " << num_procs << " simulations" << endl; 
+    }
   }
 
   MPI_Gather(local_mean_value_radius, num_sim_per_proc, MPI_DOUBLE, mean_value_radius, num_sim_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Gather(local_mean_value_width , num_sim_per_proc, MPI_DOUBLE, mean_value_width , num_sim_per_proc, MPI_DOUBLE, 1, MPI_COMM_WORLD);
   MPI_Gather(local_mean_value_mass  , num_sim_per_proc, MPI_DOUBLE, mean_value_mass  , num_sim_per_proc, MPI_DOUBLE, 2, MPI_COMM_WORLD);
+  MPI_Gather(local_mean_value_radius, num_sim_per_proc, MPI_DOUBLE, mean_value_radius, num_sim_per_proc, MPI_DOUBLE, 3, MPI_COMM_WORLD);
+  MPI_Gather(local_mean_value_width , num_sim_per_proc, MPI_DOUBLE, mean_value_width , num_sim_per_proc, MPI_DOUBLE, 4, MPI_COMM_WORLD);
+  MPI_Gather(local_mean_value_mass  , num_sim_per_proc, MPI_DOUBLE, mean_value_mass  , num_sim_per_proc, MPI_DOUBLE, 5, MPI_COMM_WORLD);
 
 
   if (rank == 0) {
@@ -146,6 +153,71 @@ int main(int argc, char** argv)
     }
     MC_var_mass.close();
   }
+  if (rank == 3) {
+    ofstream MC_global_mean_radius;
+    MC_global_mean_radius.open("G-global-mean-radius.txt");
+    double sum_radius = 0.0;
+    for (int ii = 0; ii < num_sim; ii++)
+    {
+      sum_radius += mean_value_radius[ii];
+      MC_global_mean_radius << sum_radius / double(ii+1) << endl;
+    }
+    MC_global_mean_radius.close();
+
+    ofstream MC_global_var_radius;
+    MC_global_var_radius.open("G-global-var-radius.txt");
+    double global_var_radius = 0.0;
+    for (int ii = 0; ii < num_sim; ii++)
+    {
+      global_var_radius += pow(mean_value_radius[ii] - (sum_radius / double(num_sim)), 2);
+      MC_global_var_radius << global_var_radius / double(ii+1) << endl;
+    }
+    MC_global_var_radius.close();
+  }
+  if (rank == 4) {
+    ofstream MC_global_mean_width;
+    MC_global_mean_width.open("G-global-mean-width.txt");
+    double sum_width = 0.0;
+    for (int ii = 0; ii < num_sim; ii++)
+    {
+      sum_width += mean_value_width[ii];
+      MC_global_mean_width << sum_width / double(ii+1) << endl;
+    }
+    MC_global_mean_width.close();
+
+    ofstream MC_global_var_width;
+    MC_global_var_width.open("G-global-var-width.txt");
+    double global_var_width = 0.0;
+    for (int ii = 0; ii < num_sim; ii++)
+    {
+      global_var_width += pow(mean_value_width[ii] - (sum_width / double(num_sim)), 2);
+      MC_global_var_width << global_var_width / double(ii+1) << endl;
+    }
+    MC_global_var_width.close();
+  }
+
+  if (rank == 5) {
+    ofstream MC_global_mean_mass;
+    MC_global_mean_mass.open("G-global-mean-mass.txt");
+    double sum_mass = 0.0;
+    for (int ii = 0; ii < num_sim; ii++)
+    {
+      sum_mass += mean_value_mass[ii];
+      MC_global_mean_mass << sum_mass / double(ii+1) << endl;
+    }
+    MC_global_mean_mass.close();
+
+    ofstream MC_global_var_mass;
+    MC_global_var_mass.open("G-global-var-mass.txt");
+    double global_var_mass = 0.0;
+    for (int ii = 0; ii < num_sim; ii++)
+    {
+      global_var_mass += pow(mean_value_mass[ii] - (sum_mass / double(num_sim)), 2);
+      MC_global_var_mass << global_var_mass / double(ii+1) << endl;
+    }
+    MC_global_var_mass.close();
+  }
+
   MPI_Finalize();
 }
 
