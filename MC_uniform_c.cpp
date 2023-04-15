@@ -50,6 +50,7 @@ int main(int argc, char** argv)
     local_mean_value_mass  [ii - rank * num_sim_per_proc] = result[2];
     if (rank == 0)
     {
+      counter -= 1;
       cout << "There still exit " << counter << " * " << num_procs << " simulations" << endl;
     }
   }
