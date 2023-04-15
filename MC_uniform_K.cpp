@@ -22,7 +22,7 @@ int main(int argc, char** argv)
   default_random_engine e(time(NULL));
   int num_sim = 6400;
   double * mean_value_radius = new double[num_sim];
-  double * mean_value_width  = new double[num_sim];
+  double * mean_value_thickness  = new double[num_sim];
   double * mean_value_mass   = new double[num_sim];
 
   int num_procs, rank;
@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 
   int num_sim_per_proc = num_sim / num_procs;
   double * local_mean_value_radius = new double[num_sim_per_proc];
-  double * local_mean_value_width  = new double[num_sim_per_proc];
+  double * local_mean_value_thickness  = new double[num_sim_per_proc];
   double * local_mean_value_mass   = new double[num_sim_per_proc];
 
   double P_k[4];                            // K_c1, K_c2, K_m1, K_m2
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
     counter -= 1;
     double * result = run_sim(P_k, P_G, P_c);
     local_mean_value_radius[ii - rank * num_sim_per_proc] = result[0];
-    local_mean_value_width [ii - rank * num_sim_per_proc] = result[1];
+    local_mean_value_thickness [ii - rank * num_sim_per_proc] = result[1];
     local_mean_value_mass  [ii - rank * num_sim_per_proc] = result[2];
     if (rank == 0)
     {
@@ -59,10 +59,10 @@ int main(int argc, char** argv)
   }
 
   MPI_Gather(local_mean_value_radius, num_sim_per_proc, MPI_DOUBLE, mean_value_radius, num_sim_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Gather(local_mean_value_width , num_sim_per_proc, MPI_DOUBLE, mean_value_width , num_sim_per_proc, MPI_DOUBLE, 1, MPI_COMM_WORLD);
+  MPI_Gather(local_mean_value_thickness , num_sim_per_proc, MPI_DOUBLE, mean_value_thickness , num_sim_per_proc, MPI_DOUBLE, 1, MPI_COMM_WORLD);
   MPI_Gather(local_mean_value_mass  , num_sim_per_proc, MPI_DOUBLE, mean_value_mass  , num_sim_per_proc, MPI_DOUBLE, 2, MPI_COMM_WORLD);
   MPI_Gather(local_mean_value_radius, num_sim_per_proc, MPI_DOUBLE, mean_value_radius, num_sim_per_proc, MPI_DOUBLE, 3, MPI_COMM_WORLD);
-  MPI_Gather(local_mean_value_width , num_sim_per_proc, MPI_DOUBLE, mean_value_width , num_sim_per_proc, MPI_DOUBLE, 4, MPI_COMM_WORLD);
+  MPI_Gather(local_mean_value_thickness , num_sim_per_proc, MPI_DOUBLE, mean_value_thickness , num_sim_per_proc, MPI_DOUBLE, 4, MPI_COMM_WORLD);
   MPI_Gather(local_mean_value_mass  , num_sim_per_proc, MPI_DOUBLE, mean_value_mass  , num_sim_per_proc, MPI_DOUBLE, 5, MPI_COMM_WORLD);
 
 
@@ -97,31 +97,31 @@ int main(int argc, char** argv)
 
   if (rank == 1) {
     double tol = 1.0e-8;
-    ofstream MC_mean_width;
-    MC_mean_width.open("K-mean-value-width.txt");
-    double sum_width = 0.0;
+    ofstream MC_mean_thickness;
+    MC_mean_thickness.open("K-mean-value-thickness.txt");
+    double sum_thickness = 0.0;
     int counter = 0;
     double error = 1.0;
     while (counter < num_sim && error > tol)
     {
-      if (counter > 0) {error = sum_width / double(counter);}
-      sum_width += mean_value_width[counter];
-      if (counter > 0) {error = abs(error - sum_width/double(counter+1)) / error;}
-      MC_mean_width << sum_width / double(counter+1) << endl;
+      if (counter > 0) {error = sum_thickness / double(counter);}
+      sum_thickness += mean_value_thickness[counter];
+      if (counter > 0) {error = abs(error - sum_thickness/double(counter+1)) / error;}
+      MC_mean_thickness << sum_thickness / double(counter+1) << endl;
       counter += 1;
     }
-    MC_mean_width << "It took " << counter << " samples to converge." << endl;
-    MC_mean_width.close();
+    MC_mean_thickness << "It took " << counter << " samples to converge." << endl;
+    MC_mean_thickness.close();
 
-    ofstream MC_var_width;
-    MC_var_width.open("K-var-width.txt");
-    double var_width = 0.0;
+    ofstream MC_var_thickness;
+    MC_var_thickness.open("K-var-thickness.txt");
+    double var_thickness = 0.0;
     for (int ii = 0; ii < counter; ii++)
     {
-      var_width += pow(mean_value_width[ii] - (sum_width / double(num_sim)), 2);
-      MC_var_width << var_width / double(ii+1) << endl;
+      var_thickness += pow(mean_value_thickness[ii] - (sum_thickness / double(num_sim)), 2);
+      MC_var_thickness << var_thickness / double(ii+1) << endl;
     }
-    MC_var_width.close();
+    MC_var_thickness.close();
   }
 
   if (rank == 2) {
@@ -174,25 +174,25 @@ int main(int argc, char** argv)
     MC_global_var_radius.close();
   }
   if (rank == 4) {
-    ofstream MC_global_mean_width;
-    MC_global_mean_width.open("K-global-mean-width.txt");
-    double sum_width = 0.0;
+    ofstream MC_global_mean_thickness;
+    MC_global_mean_thickness.open("K-global-mean-thickness.txt");
+    double sum_thickness = 0.0;
     for (int ii = 0; ii < num_sim; ii++)
     {
-      sum_width += mean_value_width[ii];
-      MC_global_mean_width << sum_width / double(ii+1) << endl;
+      sum_thickness += mean_value_thickness[ii];
+      MC_global_mean_thickness << sum_thickness / double(ii+1) << endl;
     }
-    MC_global_mean_width.close();
+    MC_global_mean_thickness.close();
 
-    ofstream MC_global_var_width;
-    MC_global_var_width.open("K-global-var-width.txt");
-    double global_var_width = 0.0;
+    ofstream MC_global_var_thickness;
+    MC_global_var_thickness.open("K-global-var-thickness.txt");
+    double global_var_thickness = 0.0;
     for (int ii = 0; ii < num_sim; ii++)
     {
-      global_var_width += pow(mean_value_width[ii] - (sum_width / double(num_sim)), 2);
-      MC_global_var_width << global_var_width / double(ii+1) << endl;
+      global_var_thickness += pow(mean_value_thickness[ii] - (sum_thickness / double(num_sim)), 2);
+      MC_global_var_thickness << global_var_thickness / double(ii+1) << endl;
     }
-    MC_global_var_width.close();
+    MC_global_var_thickness.close();
   }
 
   if (rank == 5) {
