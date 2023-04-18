@@ -18,7 +18,7 @@ int main(int argc, char** argv)
   uniform_real_distribution<double> c_m3(3.325, 3.675);
   uniform_real_distribution<double> c_c3(20.9, 23.1);
   default_random_engine e(time(NULL));
-  int num_sim = 6400;
+  int num_sim = 6;
   double * mean_value_radius = new double[num_sim];
   double * mean_value_thickness  = new double[num_sim];
   double * mean_value_mass   = new double[num_sim];
@@ -43,7 +43,6 @@ int main(int argc, char** argv)
   {
     P_c[0] = c_m3(local_e); // c_m3
     P_c[1] = c_c3(local_e); // c_c3
-
     double * result = run_sim(P_k, P_G, P_c); 
     local_mean_value_radius[ii - rank * num_sim_per_proc] = result[0];
     local_mean_value_thickness [ii - rank * num_sim_per_proc] = result[1];
@@ -84,7 +83,7 @@ int main(int argc, char** argv)
     double var_radius = 0.0;
     for (int ii = 0; ii < counter; ii++)
     {
-      var_radius += pow(mean_value_radius[ii] - (sum_radius / double(num_sim)), 2);
+      var_radius += pow(mean_value_radius[ii] - (sum_radius / double(counter)), 2);
       MC_var_radius << var_radius / double(ii+1) << endl;
     }
     MC_var_radius.close();
@@ -113,7 +112,7 @@ int main(int argc, char** argv)
     double var_thickness = 0.0;
     for (int ii = 0; ii < counter; ii++)
     {
-      var_thickness += pow(mean_value_thickness[ii] - (sum_thickness / double(num_sim)), 2);
+      var_thickness += pow(mean_value_thickness[ii] - (sum_thickness / double(counter)), 2);
       MC_var_thickness << var_thickness / double(ii+1) << endl;
     }
     MC_var_thickness.close();
@@ -142,7 +141,7 @@ int main(int argc, char** argv)
     double var_mass = 0.0;
     for (int ii = 0; ii < counter; ii++)
     {
-      var_mass += pow(mean_value_mass[ii] - (sum_mass / double(num_sim)), 2);
+      var_mass += pow(mean_value_mass[ii] - (sum_mass / double(counter)), 2);
       MC_var_mass << var_mass / double(ii+1) << endl;
     }
     MC_var_mass.close();
