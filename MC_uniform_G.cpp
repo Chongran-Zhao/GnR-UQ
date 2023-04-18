@@ -20,7 +20,7 @@ int main(int argc, char** argv)
   uniform_real_distribution<double> G_et(1.33, 1.47);   // 1.40 x [0.95, 1.05]
   uniform_real_distribution<double> G_ez(1.33, 1.47);   // 1.40 x [0.95, 1.05]
   default_random_engine e(time(NULL));
-  int num_sim = 6;
+  int num_sim = 6400;
   double * mean_value_radius = new double[num_sim];
   double * mean_value_thickness  = new double[num_sim];
   double * mean_value_mass   = new double[num_sim];
@@ -68,17 +68,17 @@ int main(int argc, char** argv)
 
 
   if (rank == 0) {
-    double tol = 1.0e-8; 
+    double tol = 1.0e-8;
     ofstream MC_mean_radius;
     MC_mean_radius.open("G-mean-value-radius.txt");
-    double sum_radius = 0.0;
-    int counter = 0;
+    double sum_radius = mean_value_radius[0];
+    int counter = 1;
     double error = 1.0;
     while (counter < num_sim && error > tol)
-    { 
-      if (counter > 0) {error = sum_radius / double(counter);}
+    {
+      error = sum_radius/double(counter);
       sum_radius += mean_value_radius[counter];
-      if (counter > 0) {error = abs(error - sum_radius/double(counter+1)) / error;}
+      error = abs( error - (sum_radius/double(counter+1)) ) / error;
       MC_mean_radius << sum_radius / double(counter+1) << endl;
       counter += 1;
     }
@@ -87,12 +87,20 @@ int main(int argc, char** argv)
 
     ofstream MC_var_radius;
     MC_var_radius.open("G-var-radius.txt");
+    sum_radius = mean_value_radius[0];
+    counter = 1;
+    error = 1.0;
     double var_radius = 0.0;
-    for (int ii = 0; ii < counter; ii++)
+    while (counter < num_sim && error > tol)
     {
-      var_radius += pow(mean_value_radius[ii] - (sum_radius / double(counter)), 2);
-      MC_var_radius << var_radius / double(ii+1) << endl;
+      sum_radius += mean_value_radius[counter];
+      error = var_radius / double(counter);
+      var_radius += pow(mean_value_radius[counter] - (sum_radius / double(counter+1)), 2);
+      error = abs( error - (var_radius/double(counter+1)) ) / error;
+      MC_var_radius << var_radius / double(counter+1) << endl;
+      counter += 1;
     }
+    MC_var_radius << "It took " << counter << " samples to converge." << endl;
     MC_var_radius.close();
   }
 
@@ -100,14 +108,14 @@ int main(int argc, char** argv)
     double tol = 1.0e-8;
     ofstream MC_mean_thickness;
     MC_mean_thickness.open("G-mean-value-thickness.txt");
-    double sum_thickness = 0.0;
-    int counter = 0;
+    double sum_thickness = mean_value_thickness[0];
+    int counter = 1;
     double error = 1.0;
     while (counter < num_sim && error > tol)
     {
-      if (counter > 0) {error = sum_thickness / double(counter);}
+      error = sum_thickness/double(counter);
       sum_thickness += mean_value_thickness[counter];
-      if (counter > 0) {error = abs(error - sum_thickness/double(counter+1)) / error;}
+      error = abs( error - (sum_thickness/double(counter+1)) ) / error;
       MC_mean_thickness << sum_thickness / double(counter+1) << endl;
       counter += 1;
     }
@@ -116,12 +124,20 @@ int main(int argc, char** argv)
 
     ofstream MC_var_thickness;
     MC_var_thickness.open("G-var-thickness.txt");
+    sum_thickness = mean_value_thickness[0];
+    counter = 1;
+    error = 1.0;
     double var_thickness = 0.0;
-    for (int ii = 0; ii < counter; ii++)
+    while (counter < num_sim && error > tol)
     {
-      var_thickness += pow(mean_value_thickness[ii] - (sum_thickness / double(counter)), 2);
-      MC_var_thickness << var_thickness / double(ii+1) << endl;
+      sum_thickness += mean_value_thickness[counter];
+      error = var_thickness / double(counter);
+      var_thickness += pow(mean_value_thickness[counter] - (sum_thickness / double(counter+1)), 2);
+      error = abs( error - (var_thickness/double(counter+1)) ) / error;
+      MC_var_thickness << var_thickness / double(counter+1) << endl;
+      counter += 1;
     }
+    MC_var_thickness << "It took " << counter << " samples to converge." << endl;
     MC_var_thickness.close();
   }
 
@@ -129,14 +145,14 @@ int main(int argc, char** argv)
     double tol = 1.0e-8;
     ofstream MC_mean_mass;
     MC_mean_mass.open("G-mean-value-mass.txt");
-    double sum_mass = 0.0;
-    int counter = 0;
+    double sum_mass = mean_value_mass[0];
+    int counter = 1;
     double error = 1.0;
     while (counter < num_sim && error > tol)
     {
-      if (counter > 0) {error = sum_mass / double(counter);}
+      error = sum_mass/double(counter);
       sum_mass += mean_value_mass[counter];
-      if (counter > 0) {error = abs(error - sum_mass/double(counter+1)) / error;}
+      error = abs( error - (sum_mass/double(counter+1)) ) / error;
       MC_mean_mass << sum_mass / double(counter+1) << endl;
       counter += 1;
     }
@@ -145,14 +161,23 @@ int main(int argc, char** argv)
 
     ofstream MC_var_mass;
     MC_var_mass.open("G-var-mass.txt");
+    sum_mass = mean_value_mass[0];
+    counter = 1;
+    error = 1.0;
     double var_mass = 0.0;
-    for (int ii = 0; ii < counter; ii++)
+    while (counter < num_sim && error > tol)
     {
-      var_mass += pow(mean_value_mass[ii] - (sum_mass / double(counter)), 2);
-      MC_var_mass << var_mass / double(ii+1) << endl;
+      sum_mass += mean_value_mass[counter];
+      error = var_mass / double(counter);
+      var_mass += pow(mean_value_mass[counter] - (sum_mass / double(counter+1)), 2);
+      error = abs( error - (var_mass/double(counter+1)) ) / error;
+      MC_var_mass << var_mass / double(counter+1) << endl;
+      counter += 1;
     }
+    MC_var_mass << "It took " << counter << " samples to converge." << endl;
     MC_var_mass.close();
   }
+
   if (rank == 3) {
     ofstream MC_global_mean_radius;
     MC_global_mean_radius.open("G-global-mean-radius.txt");
@@ -167,13 +192,16 @@ int main(int argc, char** argv)
     ofstream MC_global_var_radius;
     MC_global_var_radius.open("G-global-var-radius.txt");
     double global_var_radius = 0.0;
+    sum_radius = 0.0;
     for (int ii = 0; ii < num_sim; ii++)
     {
-      global_var_radius += pow(mean_value_radius[ii] - (sum_radius / double(num_sim)), 2);
+      sum_radius += mean_value_radius[ii];
+      global_var_radius += pow(mean_value_radius[ii] - (sum_radius / double(ii+1)), 2);
       MC_global_var_radius << global_var_radius / double(ii+1) << endl;
     }
     MC_global_var_radius.close();
   }
+
   if (rank == 4) {
     ofstream MC_global_mean_thickness;
     MC_global_mean_thickness.open("G-global-mean-thickness.txt");
@@ -188,9 +216,11 @@ int main(int argc, char** argv)
     ofstream MC_global_var_thickness;
     MC_global_var_thickness.open("G-global-var-thickness.txt");
     double global_var_thickness = 0.0;
+    sum_thickness = 0.0;
     for (int ii = 0; ii < num_sim; ii++)
     {
-      global_var_thickness += pow(mean_value_thickness[ii] - (sum_thickness / double(num_sim)), 2);
+      sum_thickness += mean_value_thickness[ii];
+      global_var_thickness += pow(mean_value_thickness[ii] - (sum_thickness / double(ii+1)), 2);
       MC_global_var_thickness << global_var_thickness / double(ii+1) << endl;
     }
     MC_global_var_thickness.close();
@@ -210,14 +240,15 @@ int main(int argc, char** argv)
     ofstream MC_global_var_mass;
     MC_global_var_mass.open("G-global-var-mass.txt");
     double global_var_mass = 0.0;
+    sum_mass = 0.0;
     for (int ii = 0; ii < num_sim; ii++)
     {
-      global_var_mass += pow(mean_value_mass[ii] - (sum_mass / double(num_sim)), 2);
+      sum_mass += mean_value_mass[ii];
+      global_var_mass += pow(mean_value_mass[ii] - (sum_mass / double(ii+1)), 2);
       MC_global_var_mass << global_var_mass / double(ii+1) << endl;
     }
     MC_global_var_mass.close();
   }
-
   MPI_Finalize();
 }
 
